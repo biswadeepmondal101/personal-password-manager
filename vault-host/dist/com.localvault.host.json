@@ -1,0 +1,7 @@
+{
+  "name": "com.localvault.host",
+  "description": "Native Vault Messaging Host",
+  "path": "C:\\Users\\U\\Coding\\Django\\NativeVault\\vault-host\\host.bat",
+  "type": "stdio",
+  "allowed_origins": ["chrome-extension://jadnjoidiifkhbmanfnejnfclcnkbked/"]
+}

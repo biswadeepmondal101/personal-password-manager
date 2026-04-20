@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Native Vault",
+  "version": "1.0.0",
+  "description": "Blazing fast native password manager",
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Open Vault"
+  },
+  "background": {
+    "service_worker": "src/background.ts"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.ts"]
+    }
+  ],
+  "permissions": ["nativeMessaging", "storage", "activeTab"],
+  "host_permissions": ["<all_urls>"]
+}
