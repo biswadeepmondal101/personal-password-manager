@@ -1,0 +1,8 @@
+dist
+bat_log.txt
+debug_log.txt
+error_log.txt
+host.bat
+.venv
+build
+NativeVaultEngine.spec

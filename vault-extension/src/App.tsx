@@ -11,11 +11,7 @@ export default function App() {
   const [vault, setVault] = useState<CredentialData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [revealedPasswords, setRevealedPasswords] = useState<Set<number>>(
-    new Set(),
-  );
 
-  // 1. Fetch all passwords when you click the extension puzzle piece
   useEffect(() => {
     chrome.runtime.sendMessage({ action: "get_all" }, (response) => {
       if (chrome.runtime.lastError) {
@@ -23,8 +19,6 @@ export default function App() {
         setLoading(false);
         return;
       }
-      console.log("responce", response);
-
       if (response && response.status === "success") {
         setVault(response.data);
       } else {
@@ -34,33 +28,17 @@ export default function App() {
     });
   }, []);
 
-  // 2. The Delete Function
   const deleteCredential = (id: number) => {
-    // Ask Python to delete it from the SQLite Database
     chrome.runtime.sendMessage(
       { action: "delete_credential", payload: { id } },
       (response) => {
         if (response && response.status === "success") {
-          // If Python succeeds, instantly remove it from the React UI without refreshing
           setVault((prevVault) => prevVault.filter((cred) => cred.id !== id));
         } else {
           alert("Failed to delete credential!");
         }
       },
     );
-  };
-
-  const togglePassword = (id: number) => {
-    setRevealedPasswords((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) newSet.delete(id);
-      else newSet.add(id);
-      return newSet;
-    });
-  };
-
-  const copyToClipboard = async (text: string | undefined) => {
-    if (text) await navigator.clipboard.writeText(text);
   };
 
   // UI Layout
@@ -85,22 +63,28 @@ export default function App() {
         minHeight: "400px",
         padding: "15px",
         fontFamily: "sans-serif",
-        backgroundColor: "#020a1f",
+        backgroundColor: "#1e1e24",
+        color: "#f8f9fa",
+        borderRadius: "12px", // Makes the outer edges rounded
+        border: "1px solid #3f3f46", // Defines the edge (required for rounded corners to look sharp)
+        overflow: "hidden",
       }}
     >
       <h2
         style={{
           textAlign: "center",
-          color: "#333",
-          borderBottom: "2px solid #ddd",
+          color: "#10b981", // Emerald Green
+          borderBottom: "2px solid #3f3f46",
           paddingBottom: "10px",
+          marginTop: "5px",
+          letterSpacing: "1px",
         }}
       >
-        🛡️ Native Vault
+        🛡️ Password Vault
       </h2>
 
       {vault.length === 0 ? (
-        <p style={{ textAlign: "center", color: "#666", marginTop: "30px" }}>
+        <p style={{ textAlign: "center", color: "#9ca3af", marginTop: "30px" }}>
           Your vault is empty.
         </p>
       ) : (
@@ -116,16 +100,17 @@ export default function App() {
             <div
               key={cred.id}
               style={{
-                backgroundColor: "white",
+                backgroundColor: "#2b2b36",
                 padding: "12px",
                 borderRadius: "8px",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                border: "1px solid #3f3f46",
+                boxShadow: "0 4px 6px rgba(0,0,0,0.3)",
               }}
             >
               <div
                 style={{
                   fontWeight: "bold",
-                  color: "#0056b3",
+                  color: "#10b981",
                   marginBottom: "5px",
                   fontSize: "14px",
                   wordBreak: "break-all",
@@ -135,54 +120,30 @@ export default function App() {
               </div>
 
               <div
-                style={{ fontSize: "12px", color: "#555", marginBottom: "8px" }}
+                style={{
+                  fontSize: "12px",
+                  color: "#9ca3af",
+                  marginBottom: "8px",
+                }}
               >
                 {cred.username || "No username saved"}
               </div>
 
               <div style={{ display: "flex", gap: "5px" }}>
                 <input
-                  type={revealedPasswords.has(cred.id) ? "text" : "password"}
+                  type="password"
                   value={cred.password || ""}
                   readOnly
                   style={{
                     flex: 1,
                     padding: "5px",
-                    border: "1px solid #ccc",
+                    border: "1px solid #3f3f46",
                     borderRadius: "4px",
-                    backgroundColor: "#f1f1f1",
+                    backgroundColor: "#1e1e24", // Dark input background
+                    color: "#f8f9fa", // White password text
+                    outline: "none",
                   }}
                 />
-
-                {/* View Button */}
-                <button
-                  onClick={() => togglePassword(cred.id)}
-                  style={{
-                    cursor: "pointer",
-                    padding: "5px 8px",
-                    border: "none",
-                    backgroundColor: "#e0e0e0",
-                    borderRadius: "4px",
-                  }}
-                >
-                  {revealedPasswords.has(cred.id) ? "👁️" : "🙈"}
-                </button>
-
-                {/* Copy Button */}
-                <button
-                  onClick={() => copyToClipboard(cred.password)}
-                  style={{
-                    cursor: "pointer",
-                    padding: "5px 8px",
-                    border: "none",
-                    backgroundColor: "#0056b3",
-                    color: "white",
-                    borderRadius: "4px",
-                  }}
-                >
-                  Copy
-                </button>
-
                 {/* Delete Button */}
                 <button
                   onClick={() => deleteCredential(cred.id)}
@@ -190,7 +151,7 @@ export default function App() {
                     cursor: "pointer",
                     padding: "5px 8px",
                     border: "none",
-                    backgroundColor: "#dc3545",
+                    backgroundColor: "#ef4444",
                     color: "white",
                     borderRadius: "4px",
                   }}

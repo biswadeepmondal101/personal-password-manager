@@ -8,6 +8,7 @@ import secrets
 from pathlib import Path
 import time
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+import traceback
 def debug_log(text):
     # This writes a secret log file we can read!
     with open("C:\\Users\\U\\Coding\\Django\\NativeVault\\vault-host\\debug_log.txt", "a") as f:
@@ -72,9 +73,10 @@ def main():
     c.execute('''
         CREATE TABLE IF NOT EXISTS credentials(
               id INTEGER PRIMARY KEY AUTOINCREMENT,
-              url TEXT UNIQUE NOT NULL,
+              url TEXT NOT NULL,
               username TEXT,
-              password TEXT
+              password TEXT,
+              UNIQUE(url,username)
               )
         ''')
     conn.commit()
@@ -123,13 +125,15 @@ def main():
             elif action=="get_credenial":
                 debug_log("get_credenial Isolation Test sent successfully!")
                 url=message.get("payload",{}).get("url")
-                c.execute("SELECT id , url,username,password FROM credentials  WHERE url=?",(url,))
-                row=c.fetchone()
-                if row:
-                    data={"id":row[0],"url":row[1],"username":row[2],"password":decrypt(row[3])}
-                    send_message({"status":"success","data":data})
+                c.execute("SELECT id, url, username, password FROM credentials WHERE url=?",(url,))
+                rows=c.fetchall()
+                if rows:
+                    data_list=[]
+                    for row in rows:
+                        data_list.append({"id":row[0],"url":row[1],"username":row[2],"password":decrypt(row[3])})
+                    send_message({"status":"success","data":data_list})
                 else:
-                    send_message({"status":"success","message":"No credentials found"})
+                    send_message({"status":"success","message":"Password Vault: No credentials found for this site."})
             elif action=='save_credential':
                 url=message.get("payload",{}).get("url")
                 username=message.get("payload",{}).get("username","")
@@ -138,8 +142,7 @@ def main():
                 c.execute('''
                     INSERT INTO credentials(url,username,password)
                     VAlUES(?,?,?)
-                    ON CONFLICT(url) DO UPDATE SET
-                    username=excluded.username,
+                    ON CONFLICT(url,username) DO UPDATE SET
                     password=excluded.password
                 ''',(url,username,encrypt(password)))
                 conn.commit()
@@ -156,6 +159,8 @@ def main():
                 send_message({"status":"success","message":"Unknown action"})
 
     except Exception as e:
+            error_trace = traceback.format_exc()
+            debug_log(f"CRASH TRACE:\n{error_trace}")
             send_message({"status":"error","message":f'An error occurred: {str(e)}'})
             sys.exit(1)
 
