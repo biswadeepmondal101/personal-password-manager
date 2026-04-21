@@ -1,4 +1,4 @@
-# 🛡️ Native Vault
+# 🛡️ PASSWORD VAULT
 
 **A fully offline, natively-encrypted Chrome password manager.**
 
